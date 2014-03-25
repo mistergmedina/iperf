@@ -117,7 +117,14 @@ run(struct iperf_test *test)
 		iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
 	    }
             for (;;) {
-                if (iperf_run_server(test) < 0) {
+		int rc = iperf_run_server(test);
+		if (iperf_get_test_json_output(test)) {
+		    char *str = iperf_get_test_json_output_string(test);
+		    if (str) {
+			fprintf(iperf_get_test_outfile(test), "%s\n", str);
+		    }
+		}
+                if (rc < 0) {
 		    iperf_err(test, "error - %s", iperf_strerror(i_errno));
                     fprintf(stderr, "\n");
 		    ++consecutive_errors;
@@ -131,10 +138,18 @@ run(struct iperf_test *test)
             }
 	    iperf_delete_pidfile(test);
             break;
-        case 'c':
-            if (iperf_run_client(test) < 0)
+	case 'c': {
+	    int rc = iperf_run_client(test);
+	    if (iperf_get_test_json_output(test)) {
+		char *str = iperf_get_test_json_output_string(test);
+		if (str) {
+		    fprintf(iperf_get_test_outfile(test), "%s\n", str);
+		}
+	    }
+            if (rc < 0)
 		iperf_errexit(test, "error - %s", iperf_strerror(i_errno));
             break;
+	}
         default:
             usage();
             break;
